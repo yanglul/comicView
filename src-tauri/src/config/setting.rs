@@ -3,7 +3,7 @@ use std::env;
 use config::{Config, ConfigError, Environment, File};
 use serde_derive::Deserialize;
 
-pub static mut DOWNLOAD_PATH : &str="";
+ 
 
 
 #[derive(Debug, Deserialize)]
@@ -17,7 +17,6 @@ pub struct User {
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
 pub(crate) struct Settings {
-    pub debug: bool,
     pub user: User,
 }
 
@@ -28,7 +27,7 @@ impl Settings {
 
         let s = Config::builder()
             // Start off by merging in the "default" configuration file
-            .add_source(File::with_name("/config/app"))
+            .add_source(File::with_name("../config/app"))
             // Add in the current environment file
             // Default to 'development' env
             // Note that this file is _optional_

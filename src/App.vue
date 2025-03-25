@@ -14,7 +14,7 @@ async function greet() {
 }
 async function getPath() {
   // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-  downloadPath.value = await invoke("getdownloadPath", { name: name.value });
+  downloadPath.value = await invoke("get_downloadpath", { name: name.value });
   console.log("配置地址："+downloadPath.value);
 }
 getPath();
