@@ -1,12 +1,16 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 mod config;
-mod quic;
 mod trans;
-
+use crate::trans::transport::{Transport,TransMode,Msg};
+mod common;
 #[tauri::command]
 fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+    let msg = Msg{
+        msg:"".to_string(),
+        model: TransMode::QUIC,
+    };
+    format!("Hello, {}! You've been greeted from Rust!", msg.send_msg())
 }
  
 

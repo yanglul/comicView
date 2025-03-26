@@ -2,4 +2,5 @@
 download_path = "C:\\tmp"
 user_no = "123456"
 pwd = "123456"
+url = "https://localhost:4433/Cargo.toml"
 
