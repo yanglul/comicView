@@ -17,6 +17,9 @@ async function getPath() {
   downloadPath.value = await invoke("get_downloadpath", { name: name.value });
   console.log("配置地址："+downloadPath.value);
 }
+async function downloadImg(){
+  downloadPath.value = await invoke("download_img", { name: name.value });
+}
 getPath();
 </script>
 
@@ -26,7 +29,7 @@ getPath();
 
     <div class="row">
       <a href="https://vitejs.dev" target="_blank">
-        <img src="/vite.svg" class="logo vite" alt="Vite logo" />
+        <img src="C:\Users\zero\Pictures\12.jpg" class="logo vite" alt="Vite logo" />
       </a>
       <a href="https://tauri.app" target="_blank">
         <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />

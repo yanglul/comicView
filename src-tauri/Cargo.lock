@@ -720,6 +720,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-opener",
  "tokio",
+ "toml",
  "tracing",
  "url",
 ]

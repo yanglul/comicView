@@ -1,9 +1,24 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 mod config;
+use config::{*};
 mod trans;
 use crate::trans::transport::{Transport,TransMode,Msg};
 mod common;
+
+pub struct Comic{
+    id:u64,
+    auth:String,
+    title:String,
+    size:u32,
+}
+
+
+
+
+
+
+
 #[tauri::command]
 fn greet(name: &str) -> String {
     let msg = Msg{
@@ -13,11 +28,22 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", msg.send_msg())
 }
  
+#[tauri::command]
+fn download_img(name: &str) -> String {
+    let msg = Msg{
+        msg:"".to_string(),
+        model: TransMode::QUIC,
+    };
+
+    format!("{}\\{}",CONFIG.get().unwrap().user.download_path,"" )
+}
+
+
 
 #[tauri::command]
 fn get_downloadpath() -> String {
-    let config = config::Settings::new().unwrap();
-    config.user.download_path
+    let config = setting::load_config();
+    config.user.download_path.clone()
 }
  
 

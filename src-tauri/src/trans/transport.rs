@@ -8,15 +8,13 @@ use tracing::{error, info};
 use url::Url;
 use std::{
     fs,
-    io::{self, Write,Cursor},
+    io::{self,Cursor},
     net::{SocketAddr, ToSocketAddrs},
     path::PathBuf,
     sync::Arc,
-    marker::Copy,
     time::{Duration, Instant},
 };
 use image::ImageReader;
-use futures_lite::{future};
 
 
 pub enum TransMode {
@@ -83,10 +81,6 @@ impl Transport for Msg{
                     }
                 }
             }
-            _ =>{
-                return "未知的传输类型".to_string();
-            }
-
         }
         
     }
@@ -99,10 +93,6 @@ impl Transport for Msg{
             TransMode::QUIC=>{
                 let opt = Opt::parse();
                 download_img(opt,self.msg.clone())
-            }
-            _ =>{
-                eprint!("未知的传输类型");
-                Ok(())
             }
 
         }
@@ -152,7 +142,7 @@ async fn download_img(options: Opt,path:String) -> Result<()> {
     let mut endpoint = quinn::Endpoint::client(options.bind)?;
     endpoint.set_default_client_config(client_config);
 
-    let request = format!("GET {}\r\n", path);
+    let request = format!("{}", path);
     let start = Instant::now();
     let rebind = options.rebind;
     let host = options.host.as_deref().unwrap_or(url_host);
@@ -180,7 +170,7 @@ async fn download_img(options: Opt,path:String) -> Result<()> {
     send.finish().unwrap();
     let response_start = Instant::now();
     eprintln!("request sent at {:?}", response_start - start);
-    let mut resp = recv
+    let  resp = recv
         .read_to_end(usize::MAX)
         .await
         .map_err(|e| anyhow!("failed to read response: {}", e))?;
