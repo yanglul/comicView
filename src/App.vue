@@ -5,7 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 const greetMsg = ref("");
 const name = ref("");
 const downloadPath = ref("");
-
+const imgurl = ref("");
 
 
 async function greet() {
@@ -18,8 +18,9 @@ async function getPath() {
   console.log("配置地址："+downloadPath.value);
 }
 async function downloadImg(){
-  downloadPath.value = await invoke("download_img", { name: name.value });
+  imgurl.value = await invoke("download_img", { name: name.value });
 }
+imgurl.value = "/tauri.svg";
 getPath();
 </script>
 
@@ -29,7 +30,7 @@ getPath();
 
     <div class="row">
       <a href="https://vitejs.dev" target="_blank">
-        <img src="C:\Users\zero\Pictures\12.jpg" class="logo vite" alt="Vite logo" />
+        <img src:="imgurl" class="logo vite" alt="Vite logo" />
       </a>
       <a href="https://tauri.app" target="_blank">
         <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />

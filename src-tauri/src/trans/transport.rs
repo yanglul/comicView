@@ -182,7 +182,7 @@ async fn download_img(options: Opt,path:String) -> Result<()> {
     );
     conn.close(0u32.into(), b"done");
     let img2 = ImageReader::new(Cursor::new(resp)).with_guessed_format()?.decode()?;
-    img2.save(path);
+    img2.save(path)?;
     // Give the server a fair chance to receive the close packet
     endpoint.wait_idle().await;
 
