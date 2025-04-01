@@ -5,7 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 const greetMsg = ref("");
 const name = ref("");
 const downloadPath = ref("");
-const imgurl = ref("");
+let imgurl:string = "";
 
 
 async function greet() {
@@ -17,10 +17,10 @@ async function getPath() {
   downloadPath.value = await invoke("get_downloadpath", { name: name.value });
   console.log("配置地址："+downloadPath.value);
 }
-async function downloadImg(){
-  imgurl.value = await invoke("download_img", { name: name.value });
+function downloadImg(){
+  invoke("download_img", { name: name.value }).then((path:any)=> {imgurl=<string>path});
 }
-imgurl.value = "/tauri.svg";
+imgurl = "/vite.svg";
 getPath();
 </script>
 
@@ -30,7 +30,7 @@ getPath();
 
     <div class="row">
       <a href="https://vitejs.dev" target="_blank">
-        <img src:="imgurl" class="logo vite" alt="Vite logo" />
+        <img v-bind:src="imgurl" class="logo vite" alt="Vite logo" />
       </a>
       <a href="https://tauri.app" target="_blank">
         <img src="/tauri.svg" class="logo tauri" alt="Tauri logo" />
@@ -44,7 +44,14 @@ getPath();
     <form class="row" @submit.prevent="greet">
       <input id="greet-input" v-model="name" placeholder="Enter a name..." />
       <button type="submit">Greet</button>
+
     </form>
+    <form class="row" @submit.prevent="downloadImg">
+      <input id="download-input" v-model="name" placeholder="Enter a name..." />
+      <button type="submit">download</button>
+    </form>
+ 
+    
     <p>{{ greetMsg }}</p>
   </main>
 </template>

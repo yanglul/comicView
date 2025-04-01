@@ -31,11 +31,13 @@ fn greet(name: &str) -> String {
 #[tauri::command]
 fn download_img(name: &str) -> String {
     let msg = Msg{
-        msg:"".to_string(),
+        msg: "1.jpg".to_string(),
         model: TransMode::QUIC,
     };
-
-    format!("{}\\{}",CONFIG.get().unwrap().user.download_path,"" )
+    
+    let config = setting::load_config();
+    msg.download("/1.jpg".to_string()).unwrap();
+    format!("{}\\{}", config.user.download_path.clone(),"1.jpg" )
 }
 
 
@@ -53,7 +55,7 @@ fn get_downloadpath() -> String {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet,get_downloadpath])
+        .invoke_handler(tauri::generate_handler![greet,get_downloadpath,download_img])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

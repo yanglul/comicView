@@ -44,3 +44,4 @@ directories-next = "2.0.0"
 rcgen = "0.13"
 image = "0.25.6"
 toml = "0.8.20"
+tracing-subscriber = { version = "0.3.0", default-features = false, features = ["env-filter", "fmt", "ansi", "time", "local-time"] }
