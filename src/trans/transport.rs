@@ -2,38 +2,35 @@ use crate::common;
 use crate::setting;
 use anyhow::{anyhow, Result};
 use clap::Parser;
+use image::ImageReader;
 use quinn_proto::crypto::rustls::QuicClientConfig;
 use rustls::pki_types::CertificateDer;
-use tracing::{error, info};
-use url::Url;
 use std::{
     fs,
-    io::{self,Cursor},
+    io::{self, Cursor},
     net::{SocketAddr, ToSocketAddrs},
     path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
 };
-use image::ImageReader;
-
+use tracing::{error, info};
+use url::Url;
 
 pub enum TransMode {
     QUIC,
     HTTP,
 }
 
-
-const GETURL : &str =  "https://localhost:4433/Cargo.toml";
-pub struct Msg{
-   pub msg : String,
-   pub model : TransMode,
+const GETURL: &str = "https://localhost:4433/Cargo.toml";
+pub struct Msg {
+    pub msg: String,
+    pub model: TransMode,
 }
 
-pub trait Transport{
-    fn send_msg(&self)->String;
-    fn download(&self,path:String)->Result<()>;
+pub trait Transport {
+    fn send_msg(&self) -> String;
+    fn download(&self, path: String) -> Result<()>;
 }
-
 
 /// HTTP/0.9 over QUIC client
 #[derive(Parser, Debug)]
@@ -42,7 +39,6 @@ struct Opt {
     /// Perform NSS-compatible TLS key logging to the file specified in `SSLKEYLOGFILE`.
     #[clap(long = "keylog")]
     keylog: bool,
-
 
     /// Override hostname used for certificate verification
     #[clap(long = "host")]
@@ -61,58 +57,54 @@ struct Opt {
     bind: SocketAddr,
 }
 
-
-
-impl Transport for Msg{
-    fn send_msg(&self)->String{
-        match self.model{
-            TransMode::HTTP=>{
+impl Transport for Msg {
+    fn send_msg(&self) -> String {
+        match self.model {
+            TransMode::HTTP => {
                 return "暂不支持http请求".to_string();
-            },
-            TransMode::QUIC=>{
-                let  opt = Opt::parse();
-                let res = send_msg(opt,self.msg.clone());
-                match res{
-                    Ok(r)=>{
+            }
+            TransMode::QUIC => {
+                let opt = Opt::parse();
+                let res = send_msg(opt, self.msg.clone());
+                match res {
+                    Ok(r) => {
                         return String::from_utf8(r).unwrap();
-                    },
-                    Err(e) =>{
-                        return format!("{}",e);
+                    }
+                    Err(e) => {
+                        return format!("{}", e);
                     }
                 }
             }
         }
-        
     }
-    fn download(&self,path:String)->Result<()>{
-        match self.model{
-            TransMode::HTTP=>{
+    fn download(&self, path: String) -> Result<()> {
+        match self.model {
+            TransMode::HTTP => {
                 eprint!("暂不支持的传输类型");
                 Ok(())
-            },
-            TransMode::QUIC=>{
+            }
+            TransMode::QUIC => {
                 let opt = Opt::parse();
                 let request = format!("GET {}\r\n", path);
-                let resp = send_msg(opt,request)?;
-                info!("下载图片大小:{}",resp.len());
-                let img2 = ImageReader::new(Cursor::new(resp)).with_guessed_format()?.decode()?;
+                let resp = send_msg(opt, request)?;
+                info!("下载图片大小:{}", resp.len());
+                let img2 = ImageReader::new(Cursor::new(resp))
+                    .with_guessed_format()?
+                    .decode()?;
                 let config = setting::load_config();
-                img2.save(format!("{}\\{}", config.user.download_path.clone(),"1.jpg" ))?;
+                img2.save(format!(
+                    "{}\\{}",
+                    config.user.download_path.clone(),
+                    "1.jpg"
+                ))?;
                 Ok(())
             }
-
         }
     }
-
 }
 
-
-
- 
-
-
 #[tokio::main]
-async fn send_msg(options: Opt,request:String) -> Result<Vec<u8>> {
+async fn send_msg(options: Opt, request: String) -> Result<Vec<u8>> {
     let url = Url::parse(GETURL).unwrap();
     let url_host = strip_ipv6_brackets(url.host_str().unwrap());
     let remote = (url_host, url.port().unwrap_or(4433))
@@ -151,7 +143,6 @@ async fn send_msg(options: Opt,request:String) -> Result<Vec<u8>> {
     let mut endpoint = quinn::Endpoint::client(options.bind)?;
     endpoint.set_default_client_config(client_config);
 
-    
     let start = Instant::now();
     let rebind = options.rebind;
     let host = options.host.as_deref().unwrap_or(url_host);

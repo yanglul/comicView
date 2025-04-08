@@ -1,9 +1,5 @@
-
-
 use serde_derive::Deserialize;
-use std::{sync::OnceLock};
- 
-
+use std::sync::OnceLock;
 
 #[derive(Debug, Deserialize)]
 #[allow(unused)]
@@ -20,11 +16,10 @@ pub(crate) struct Config {
 }
 pub static CONFIG: OnceLock<Config> = OnceLock::new();
 
-
 pub fn load_config() -> &'static Config {
     CONFIG.get_or_init(|| {
-        let config_str = std::fs::read_to_string("../config/app.toml")
-            .expect("Failed to read config file");
+        let config_str =
+            std::fs::read_to_string("../config/app.toml").expect("Failed to read config file");
         toml::from_str(&config_str).expect("Failed to parse config file")
     })
 }
