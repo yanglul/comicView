@@ -9,7 +9,7 @@ mod trans;
 use crate::trans::transport::{Msg, TransMode, Transport};
 use eframe::egui;
 use egui::{ComboBox, Context, Id, Modal, ProgressBar, Ui, Widget, Window};
-mod modal;
+
  
 
 fn main() {
@@ -49,97 +49,8 @@ impl Default for MyApp {
         }
     }
 }
-impl modal::Demo for MyApp {
-    fn name(&self) -> &'static str {
-        "🗖 Modals"
-    }
 
-    fn show(&mut self, ctx: &Context, open: &mut bool) {
-        use modal::View as _;
-        Window::new(self.name())
-            .open(open)
-            .vscroll(false)
-            .resizable(false)
-            .show(ctx, |ui| self.ui(ui));
-    }
-}
-
-
-impl modal::View for MyApp {
-    fn ui(&mut self, ui: &mut Ui) {
-        let Self {
-            id,
-            token,
-            pwd,
-            login_modal_open,
-            save_progress,
-        } = self;
-
-        ui.horizontal(|ui| {
-            if ui.button("Open User Modal").clicked() {
-                *login_modal_open = true;
-            }
-        });
-
-
-        if *login_modal_open {
-            let modal = Modal::new(Id::new("Modal A")).show(ui.ctx(), |ui| {
-                ui.set_width(250.0);
-
-                ui.heading("Edit User");
-
-                ui.label("Name:");
-                ui.text_edit_singleline(id);
-
-                ui.text_edit_singleline(pwd);
-
-                ui.separator();
-
-                egui::Sides::new().show(
-                    ui,
-                    |_ui| {},
-                    |ui| {
-                        if ui.button("Save").clicked() {
-                            *save_progress = Some(0.0);
-                        }
-                        if ui.button("Cancel").clicked() {
-                            // You can call `ui.close()` to close the modal.
-                            // (This causes the current modals `should_close` to return true)
-                            *login_modal_open = false;
-                        }
-                    },
-                );
-            });
-
-            if modal.should_close() {
-                *login_modal_open = false;
-            }
-        }
-
-         
-
-        if let Some(progress) = *save_progress {
-            Modal::new(Id::new("Modal C")).show(ui.ctx(), |ui| {
-                ui.set_width(70.0);
-                ui.heading("Saving…");
-
-                ProgressBar::new(progress).ui(ui);
-
-                if progress >= 1.0 {
-                    *save_progress = None;
-                    *login_modal_open = false;
-                } else {
-                    *save_progress = Some(progress + 0.003);
-                    ui.ctx().request_repaint();
-                }
-            });
-        }
-
-        ui.vertical_centered(|ui| {
-            ui.add(egui_github_link_file!());
-        });
-    }
-}
+ 
 
 
 
@@ -153,8 +64,55 @@ impl eframe::App for MyApp {
                 ui.text_edit_singleline(&mut self.id)
                     .labelled_by(name_label.id);
             });
+            let modal = Modal::new( Id::new("Modal A"));
+            let is_show = self.login_modal_open.clone();
+            if is_show{
+                // What goes inside the modal
+                modal.show(ui.ctx(),|ui| {
+                    ui.set_width(250.0);
+                    ui.heading("Edit User");
+                    ui.label("Name:");
+                    ui.text_edit_singleline(&mut self.id);
+
+                    ui.text_edit_singleline(&mut self.token);
+
+                    ui.separator();
+
+                    egui::Sides::new().show(
+                        ui,
+                        |_ui| {},
+                        |ui| {
+                            if ui.button("Save").clicked() {
+                                self.save_progress= Some(0.1);
+                                // self.login_modal_open=false;
+                            }
+                            if ui.button("Cancel").clicked() {
+                                self.login_modal_open=false;
+                            }
+                        },
+                    );
+                });
+            }
+
+            if let Some(progress) = self.save_progress {
+                Modal::new(Id::new("Modal D")).show(ui.ctx(), |ui| {
+                    ui.set_width(70.0);
+                    ui.heading("Loading…");
+    
+                    ProgressBar::new(progress).ui(ui);
+    
+                    if progress >= 1.0 {
+                        self.save_progress = None;
+                    } else {
+                        self.save_progress = Some(progress + 0.003);
+                        ui.ctx().request_repaint();
+                    }
+                });
+            }
+
+
             if ui.button("Increment").clicked() {
-                self.login_modal_open = true;
+                self.login_modal_open=true;
             }
             ui.label(format!("Hello '{}', token {}", self.token, self.token));
 
@@ -162,17 +120,4 @@ impl eframe::App for MyApp {
     }
 }
 
-
-/// Create a [`Hyperlink`](egui::Hyperlink) to this egui source code file on github.
-#[macro_export]
-macro_rules! egui_github_link_file {
-    () => {
-        $crate::egui_github_link_file!("(source code)")
-    };
-    ($label: expr) => {
-        egui::github_link_file!(
-            "https://github.com/emilk/egui/blob/master/",
-            egui::RichText::new($label).small()
-        )
-    };
-}
+ 
