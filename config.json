@@ -1,0 +1,10 @@
+{
+  "username": "",
+  "password": "",
+  "downloadDir": ".\\漫画下载",
+  "downloadFormat": "Jpeg",
+  "archiveFormat": "Image",
+  "proxyMode": "System",
+  "proxyHost": "",
+  "proxyPort": 7890
+}

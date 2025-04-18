@@ -1,16 +1,32 @@
-// Prevents additional console window on Windows in release, DO NOT REMOVE!!
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+use anyhow::Context;
+use parking_lot::RwLock;
 
-#[warn(unused_imports)]
-mod common;
+// TODO: 用prelude来消除警告
+use crate::commands::*;
+use crate::config::Config;
+use crate::download_manager::DownloadManager;
+use crate::events::prelude::*;
+use crate::jm_client::JmClient;
+use tokio::runtime::Runtime;
+
+mod commands;
 mod config;
-use config::*;
-mod trans;
-use crate::trans::transport::{Msg, TransMode, Transport};
-use eframe::egui;
-use egui::{ComboBox, Context, Id, Modal, ProgressBar, Ui, Widget, Window};
+mod download_manager;
+mod errors;
+mod events;
+mod extensions;
+mod jm_client;
+mod responses;
+mod save_archive;
+mod types;
+mod utils;
+mod state;
 
- 
+use eframe::egui;
+use egui::{ComboBox, Id, Modal, ProgressBar, Ui, Widget, Window};
+use std::sync::Arc;
+use crate::state::StateManager;
+
 
 fn main() {
     // 自定义格式（包含时间、日志级别、目标模块）
@@ -20,22 +36,29 @@ fn main() {
         .init();
     let native_options = eframe::NativeOptions{
         viewport: egui::ViewportBuilder::default()
-        .with_inner_size([640.0, 240.0]) // wide enough for the drag-drop overlay text
+        .with_inner_size([640.0, 300.0]) // wide enough for the drag-drop overlay text
         .with_drag_and_drop(true),
         ..Default::default()
     };
+    
+    
+
+
     let _ = eframe::run_native("ComicView", native_options, Box::new(|cc| {
         egui_extras::install_image_loaders(&cc.egui_ctx);
         Ok(Box::<MyApp>::default())}));
 }
 
- 
+#[derive(Clone)]
 struct MyApp {
     id: String,
     token: String,
     pwd: String,
     login_modal_open: bool,
+    imgpath: Option<String>,
     save_progress: Option<f32>,
+    img:egui::widgets::ImageSource<'static>,
+    state: Arc<StateManager>,
 }
 
 impl Default for MyApp {
@@ -46,18 +69,38 @@ impl Default for MyApp {
             pwd: "".to_owned(),
             login_modal_open: false,
             save_progress: None,
+            imgpath: None,
+            img:egui::include_image!("ferris.svg"),
+            state: Arc::new(StateManager::new()),
         }
     }
+
 }
+use crate::state::State;
+impl MyApp{
+    fn state<T>(&self) -> State<'_, T>
+    where
+        T: Send + Sync + 'static,
+      {
+        self.state
+          .try_get()
+          .expect("state() called before manage() for given type")
+      }
 
- 
-
-
+}
 
 
 impl eframe::App for MyApp {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
+            let config = RwLock::new({
+                Config::new(&self).expect("读取配置失败")
+            });
+            self.state.set(config);
+            let jm_client = JmClient::new(self.clone());
+
+
+
             ui.heading("My egui Application");
             ui.horizontal(|ui| {
                 let name_label = ui.label("Your name: ");
@@ -83,8 +126,12 @@ impl eframe::App for MyApp {
                         |_ui| {},
                         |ui| {
                             if ui.button("Save").clicked() {
-                                self.save_progress= Some(0.1);
-                                // self.login_modal_open=false;
+                                let rt: Runtime = Runtime::new().unwrap();
+
+                                let user_profile = rt.block_on(jm_client.login(&self.id, &self.token)).unwrap();
+                                println!("登录接口返回:{:?}",user_profile);
+                                // self.imgpath = Some("file://C:\\tmp\\1.jpg".to_string());
+                                self.login_modal_open=false;
                             }
                             if ui.button("Cancel").clicked() {
                                 self.login_modal_open=false;
@@ -93,6 +140,15 @@ impl eframe::App for MyApp {
                     );
                 });
             }
+
+            if let Some(imgpath) = &self.imgpath {
+                // ui.image(imgpath);
+            }else{
+                ui.image(egui::include_image!("C:\\tmp\\3.jpg"))
+                    .on_hover_text_at_pointer("Svg");
+
+            }
+
 
             if let Some(progress) = self.save_progress {
                 Modal::new(Id::new("Modal D")).show(ui.ctx(), |ui| {
@@ -110,14 +166,21 @@ impl eframe::App for MyApp {
                 });
             }
 
+            
+            
+
 
             if ui.button("Increment").clicked() {
                 self.login_modal_open=true;
             }
             ui.label(format!("Hello '{}', token {}", self.token, self.token));
 
+             
+
+            
+            
         });
     }
 }
 
- 
+
