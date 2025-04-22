@@ -35,6 +35,7 @@ enum ApiPath {
     Login,
     GetUserProfile,
     Search,
+    GetCategory,
     GetComic,
     GetChapter,
     GetScrambleId,
@@ -52,6 +53,7 @@ impl ApiPath {
             ApiPath::GetChapter => "/chapter",
             ApiPath::GetScrambleId => "/chapter_view_template",
             ApiPath::GetFavoriteFolder => "/favorite",
+            ApiPath::GetCategory => "/categories/filter",
         }
     }
 }
@@ -448,6 +450,8 @@ impl JmClient {
         )?;
         Ok(toggle_favorite_resp)
     }
+ 
+
 }
 
 pub fn create_http_client(app: &MyApp, jar: &Arc<Jar>) -> ClientWithMiddleware {

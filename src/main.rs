@@ -1,4 +1,4 @@
-use anyhow::Context;
+
 use parking_lot::RwLock;
 
 // TODO: 用prelude来消除警告
@@ -26,7 +26,8 @@ use eframe::egui;
 use egui::{ComboBox, Id, Modal, ProgressBar, Ui, Widget, Window};
 use std::sync::Arc;
 use crate::state::StateManager;
-
+use crate::responses::GetUserProfileRespData;
+use crate::types::SearchSort;
 
 fn main() {
     // 自定义格式（包含时间、日志级别、目标模块）
@@ -59,6 +60,8 @@ struct MyApp {
     save_progress: Option<f32>,
     img:egui::widgets::ImageSource<'static>,
     state: Arc<StateManager>,
+    user_profile:GetUserProfileRespData,
+    keyword:String,
 }
 
 impl Default for MyApp {
@@ -72,6 +75,8 @@ impl Default for MyApp {
             imgpath: None,
             img:egui::include_image!("ferris.svg"),
             state: Arc::new(StateManager::new()),
+            user_profile:GetUserProfileRespData::default(),
+            keyword:"".to_owned(),
         }
     }
 
@@ -98,9 +103,6 @@ impl eframe::App for MyApp {
             });
             self.state.set(config);
             let jm_client = JmClient::new(self.clone());
-
-
-
             ui.heading("My egui Application");
             ui.horizontal(|ui| {
                 let name_label = ui.label("Your name: ");
@@ -131,6 +133,7 @@ impl eframe::App for MyApp {
                                 let user_profile = rt.block_on(jm_client.login(&self.id, &self.token)).unwrap();
                                 println!("登录接口返回:{:?}",user_profile);
                                 // self.imgpath = Some("file://C:\\tmp\\1.jpg".to_string());
+                                self.user_profile = user_profile;;
                                 self.login_modal_open=false;
                             }
                             if ui.button("Cancel").clicked() {
@@ -144,28 +147,9 @@ impl eframe::App for MyApp {
             if let Some(imgpath) = &self.imgpath {
                 // ui.image(imgpath);
             }else{
-                ui.image(egui::include_image!("C:\\tmp\\3.jpg"))
-                    .on_hover_text_at_pointer("Svg");
+                // ui.image(egui::include_image!("C:\\tmp\\3.jpg")).on_hover_text_at_pointer("Svg");
 
             }
-
-
-            if let Some(progress) = self.save_progress {
-                Modal::new(Id::new("Modal D")).show(ui.ctx(), |ui| {
-                    ui.set_width(70.0);
-                    ui.heading("Loading…");
-    
-                    ProgressBar::new(progress).ui(ui);
-    
-                    if progress >= 1.0 {
-                        self.save_progress = None;
-                    } else {
-                        self.save_progress = Some(progress + 0.003);
-                        ui.ctx().request_repaint();
-                    }
-                });
-            }
-
             
             
 
@@ -175,9 +159,31 @@ impl eframe::App for MyApp {
             }
             ui.label(format!("Hello '{}', token {}", self.token, self.token));
 
-             
-
+            if ui.button("Search").clicked() {
+                let rt: Runtime = Runtime::new().unwrap();
+                let keyword = "性转";
+                let search_resp = rt.block_on(
+                    jm_client.search(&keyword, 1, SearchSort::Latest)
+                ).unwrap();
+                println!("搜索结果{:?}",search_resp);
+            }
             
+            if ui.button("类别").clicked(){
+                ui.menu_button("Popups can have submenus", |ui| {
+                    ui.menu_button("SubMenu1", |ui| {
+                        
+                        let _ = ui.button("Item1");
+                        let _ = ui.button("Item2");
+                    });
+                    ui.menu_button("SubMenu2", |ui| {
+                        let _ = ui.button("Item3");
+                    });
+                    let _ = ui.button("Item4");
+                });
+            
+            }
+
+
             
         });
     }
