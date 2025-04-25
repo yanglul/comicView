@@ -202,3 +202,10 @@ impl ArchiveFormat {
         }
     }
 }
+
+#[derive(Debug, Clone)]
+pub  struct  Subclass{
+    pub name:String,
+    pub item:Vec<String>,
+}
+

@@ -36,7 +36,7 @@ rcgen = "0.13"
 image = { version = "0.25.6", default-features = false, features = ["jpeg", "png", "webp"] }
 toml = "0.8.20"
 tracing-subscriber = { version = "0.3.0", default-features = false, features = ["env-filter", "fmt", "ansi", "time", "local-time"] }
-eframe = {version="0.31.1" }
+eframe = {version="0.31.1" ,features = ["default"] }
 egui_extras = { version = "0.31.1", features = ["default", "all_loaders"] }
 env_logger = { version = "0.10", default-features = false, features = [
   "auto-color",
